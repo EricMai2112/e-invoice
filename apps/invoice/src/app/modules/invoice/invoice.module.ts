@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { InvoiceDestination } from '@commonjs/schemas/invoice.schema';
 import { InvoiceController } from './controllers/invoice.controller';
-import { InvoiceService } from './services/app.service';
+import { InvoiceService } from './services/invoice.service';
 import { InvoiceRepository } from './repositories/invoice.repository';
 
 @Module({
