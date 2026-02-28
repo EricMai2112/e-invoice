@@ -21,6 +21,10 @@ export class UserRepository {
     return this.userModel.findOne({ email }).exec();
   }
 
+  getAll() {
+    return this.userModel.find().exec();
+  }
+
   async exists(email: string) {
     const result = await this.userModel.exists({ email }).exec();
 

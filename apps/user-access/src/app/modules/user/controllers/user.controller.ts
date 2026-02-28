@@ -19,4 +19,11 @@ export class UserController {
 
     return Response.success<string>(HTTP_MESSAGE.CREATED);
   }
+
+  @MessagePattern(TCP_REQUEST_MESSAGE.USER.GET_ALL)
+  async getAll() {
+    const result = await this.userService.getList();
+
+    return Response.success<UserTcpResponseType[]>(result);
+  }
 }

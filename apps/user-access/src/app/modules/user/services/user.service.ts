@@ -17,4 +17,8 @@ export class UserService {
     const input = createUserRequestMapping(params);
     return this.userRepository.create(input);
   }
+
+  async getList() {
+    return this.userRepository.getAll();
+  }
 }
