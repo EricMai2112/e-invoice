@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CONFIGURATION, TConfiguration } from '../configuration';
 import { KeyCloakModule } from './modules/keycloak/keycloak.module';
+import { AuthorizerModule } from './modules/authorizer/authorizer.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, load: [() => CONFIGURATION] }), KeyCloakModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true, load: [() => CONFIGURATION] }), KeyCloakModule, AuthorizerModule],
   controllers: [],
   providers: [],
 })
