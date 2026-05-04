@@ -8,6 +8,8 @@ import { ProcessId } from '@common/decorators/processId.decorator';
 import { CreateUserTcpRequest, UserTcpResponseType } from '@common/interfaces/tcp/user';
 import { TCP_REQUEST_MESSAGE } from '@common/constants/enum/tcp-request-message.enum';
 import { map } from 'rxjs';
+import { Authorization } from '@common/decorators/authorizer.decorator';
+
 @ApiTags('User')
 @Controller('user')
 export class UserController {
@@ -16,6 +18,7 @@ export class UserController {
   @Post()
   @ApiOkResponse({ type: ResponseDTO<string> })
   @ApiOperation({ summary: 'Create a new user' })
+  @Authorization({ secured: false })
   create(@Body() body: CreateUserRequestDto, @ProcessId() processId: string) {
     return this.userAccessClient
       .send<string, CreateUserTcpRequest>(TCP_REQUEST_MESSAGE.USER.CREATE, {
