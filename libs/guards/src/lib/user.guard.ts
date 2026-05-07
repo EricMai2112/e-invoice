@@ -9,8 +9,8 @@ export class UserGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const authOptions = this.reflector.get<{ secured: boolean }>(MetadataKeys.SECURED, context.getHandler());
 
-    if (authOptions?.secured) {
-      return false;
+    if (!authOptions?.secured) {
+      return true;
     }
 
     return true;
