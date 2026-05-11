@@ -1,10 +1,15 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import { AuthorizerResponse, LoginTcpRequest } from '@common/interfaces/tcp/authorizer';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { KeycloakHttpService } from '../../keycloak/services/keycloak-http.service';
 import jwt, { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwksRsa, { JwksClient } from 'jwks-rsa';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom, map } from 'rxjs';
+import { TcpClient } from '@common/interfaces/tcp/common/tcp-client.interface';
+import { TCP_SERVICES } from '@common/configuration/tcp.config';
+import { TCP_REQUEST_MESSAGE } from '@common/constants/enum/tcp-request-message.enum';
+import { User } from '@commonjs/schemas/user.schema';
 
 @Injectable()
 export class AuthorizerService {
@@ -14,6 +19,7 @@ export class AuthorizerService {
   constructor(
     private readonly keycloakHttpService: KeycloakHttpService,
     private readonly configService: ConfigService,
+    @Inject(TCP_SERVICES.USER_ACCESS_SERVICE) private readonly userAccessService: TcpClient,
   ) {
     const host = this.configService.get('KEYCLOAK_CONFIG.HOST');
     const realm = this.configService.get('KEYCLOAK_CONFIG.REALM');
@@ -60,5 +66,16 @@ export class AuthorizerService {
       this.logger.error({ error });
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  private getUserByUserId(userId: string, processId: string) {
+    return firstValueFrom(
+      this.userAccessService
+        .send<User, string>(TCP_REQUEST_MESSAGE.USER.GET_BY_USER_ID, {
+          data: userId,
+          processId,
+        })
+        .pipe(map((data) => data.data)),
+    );
   }
 }
