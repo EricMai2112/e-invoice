@@ -8,6 +8,7 @@ import { CreateUserTcpRequest, UserTcpResponseType } from '@common/interfaces/tc
 import { Response } from '@common/interfaces/tcp/common/response.interface';
 import { HTTP_MESSAGE } from '@common/constants/enum/http-message.enum';
 import { ProcessId } from '@common/decorators/processId.decorator';
+import { User } from '@commonjs/schemas/user.schema';
 
 @Controller('user')
 @UseInterceptors(new TcpLoggingInterceptor())
@@ -26,5 +27,12 @@ export class UserController {
     const result = await this.userService.getList();
 
     return Response.success<UserTcpResponseType[]>(result);
+  }
+
+  @MessagePattern(TCP_REQUEST_MESSAGE.USER.GET_BY_USER_ID)
+  async getByUserId(@RequestParams() userId: string) {
+    const user = await this.userService.getUserByUserId(userId);
+
+    return Response.success<User>(user as User);
   }
 }

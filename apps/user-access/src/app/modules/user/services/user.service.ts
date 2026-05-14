@@ -52,4 +52,8 @@ export class UserService {
         .pipe(map((data) => data.data)),
     );
   }
+
+  async getUserByUserId(userId: string) {
+    return this.userRepository.getByUserId(userId);
+  }
 }

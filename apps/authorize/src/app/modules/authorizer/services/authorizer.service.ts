@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { AuthorizerResponse, LoginTcpRequest } from '@common/interfaces/tcp/authorizer';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { KeycloakHttpService } from '../../keycloak/services/keycloak-http.service';
@@ -10,6 +9,7 @@ import { TcpClient } from '@common/interfaces/tcp/common/tcp-client.interface';
 import { TCP_SERVICES } from '@common/configuration/tcp.config';
 import { TCP_REQUEST_MESSAGE } from '@common/constants/enum/tcp-request-message.enum';
 import { User } from '@commonjs/schemas/user.schema';
+import { Role } from '@commonjs/schemas/role.schema';
 
 @Injectable()
 export class AuthorizerService {
@@ -41,7 +41,7 @@ export class AuthorizerService {
     return { accessToken, refreshToken };
   }
 
-  async verifyUserToken(token: string): Promise<AuthorizerResponse> {
+  async verifyUserToken(token: string, processId: string): Promise<AuthorizerResponse> {
     const decoded = jwt.decode(token, { complete: true }) as Jwt;
 
     if (!decoded || !decoded.header || !decoded.header.kid) {
@@ -53,19 +53,32 @@ export class AuthorizerService {
       const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as JwtPayload;
       this.logger.debug({ payload });
 
+      const user = await this.userValidation(payload.sub as string, processId);
+
       return {
         valid: true,
         metadata: {
           jwt: payload,
-          permissions: [],
-          user: undefined,
-          userId: undefined,
+          //dung flat de giam do sau cua mang
+          permissions: (user.roles as unknown as Role[]).map((role) => role.permission).flat(),
+          user: user,
+          userId: user.id,
         },
       };
     } catch (error) {
       this.logger.error({ error });
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  private async userValidation(userId: string, processId: string) {
+    const user = await this.getUserByUserId(userId, processId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
   }
 
   private getUserByUserId(userId: string, processId: string) {
