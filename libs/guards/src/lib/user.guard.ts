@@ -32,7 +32,7 @@ export class UserGuard implements CanActivate {
   private async verifyToken(req: any): Promise<boolean> {
     try {
       const token = getAccessToken(req);
-      const processId = req(MetadataKeys.PROCESS_ID);
+      const processId = req[MetadataKeys.PROCESS_ID];
 
       const result = await this.verifyUserToken(token, processId);
       if (!result?.valid) {

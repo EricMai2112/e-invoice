@@ -25,7 +25,7 @@ export class AuthorizerService {
     const realm = this.configService.get('KEYCLOAK_CONFIG.REALM');
 
     this.jwksClient = jwksRsa({
-      jwksUri: `${host}/realms/S${realm}/protocol/openid-connect/certs`,
+      jwksUri: `${host}/realms/${realm}/protocol/openid-connect/certs`,
       cache: true,
       rateLimit: true,
     });
