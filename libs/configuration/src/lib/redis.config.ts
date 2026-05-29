@@ -1,4 +1,8 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { createKeyv } from '@keyv/redis';
 
 export class RedisConfiguration {
   @IsString()
@@ -17,3 +21,17 @@ export class RedisConfiguration {
     this.TTL = data?.TTL || Number(process.env['REDIS_TTL']) || 30 * 60000;
   }
 }
+
+export const RedisProvider = CacheModule.registerAsync({
+  imports: [ConfigModule],
+  useFactory: async (configService: ConfigService) => {
+    const host = configService.get('REDIS_CONFIG.HOST');
+    const port = configService.get('REDIS_CONFIG.PORT');
+    const ttl = configService.get('REDIS_CONFIG.TTL');
+    return {
+      stores: [createKeyv(`redis://${host}:${port}`)],
+      ttl,
+    };
+  },
+  inject: [ConfigService],
+});
