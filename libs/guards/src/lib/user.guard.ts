@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { Injectable, CanActivate, ExecutionContext, Logger, UnauthorizedException, Inject } from '@nestjs/common';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
@@ -7,6 +8,8 @@ import { TCP_SERVICES } from '@common/configuration/tcp.config';
 import { TcpClient } from '@common/interfaces/tcp/common/tcp-client.interface';
 import { TCP_REQUEST_MESSAGE } from '@common/constants/enum/tcp-request-message.enum';
 import { AuthorizerResponse } from '@common/interfaces/tcp/authorizer';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class UserGuard implements CanActivate {
@@ -16,6 +19,7 @@ export class UserGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     @Inject(TCP_SERVICES.AUTHORIZER_SERVICE) private readonly authorizerClient: TcpClient,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const authOptions = this.reflector.get<{ secured: boolean }>(MetadataKeys.SECURED, context.getHandler());
@@ -32,6 +36,7 @@ export class UserGuard implements CanActivate {
   private async verifyToken(req: any): Promise<boolean> {
     try {
       const token = getAccessToken(req);
+
       const processId = req[MetadataKeys.PROCESS_ID];
 
       const result = await this.verifyUserToken(token, processId);
@@ -57,5 +62,10 @@ export class UserGuard implements CanActivate {
         })
         .pipe(map((data) => data.data)),
     );
+  }
+
+  generateTokenCacheKeytoken(token: string): string {
+    const hash = createHash('sha256').update(token).digest('hex');
+    return `user-token:${hash}`;
   }
 }
