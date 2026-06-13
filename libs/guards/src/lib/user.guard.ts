@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { Injectable, CanActivate, ExecutionContext, Logger, UnauthorizedException, Inject } from '@nestjs/common';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
@@ -36,15 +35,28 @@ export class UserGuard implements CanActivate {
   private async verifyToken(req: any): Promise<boolean> {
     try {
       const token = getAccessToken(req);
+      const cacheKey = this.generateTokenCacheKey(token);
 
       const processId = req[MetadataKeys.PROCESS_ID];
 
+      const cacheData = await this.cacheManager.get<AuthorizerResponse>(cacheKey);
+
+      //Neu co du lieu trong cache
+      if (cacheData) {
+        setUserData(req, cacheData);
+        return true;
+      }
+
+      //Neu khong co du lieu trong cache, goi GRPC de verify token lay userData, sau do moi tien hanh set vao
       const result = await this.verifyUserToken(token, processId);
       if (!result?.valid) {
         throw new UnauthorizedException('Token is invalid');
       }
 
+      this.logger.debug(`Set user data to cache for cache key: ${cacheKey}`);
+
       setUserData(req, result);
+      this.cacheManager.set(cacheKey, result, 30 * 60 * 1000); //TTL: 30p
 
       return true;
     } catch (error) {
@@ -64,7 +76,7 @@ export class UserGuard implements CanActivate {
     );
   }
 
-  generateTokenCacheKeytoken(token: string): string {
+  generateTokenCacheKey(token: string): string {
     const hash = createHash('sha256').update(token).digest('hex');
     return `user-token:${hash}`;
   }
