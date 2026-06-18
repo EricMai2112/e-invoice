@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CONFIGURATION, TConfiguration } from '../configuration';
@@ -15,6 +16,7 @@ import { TCP_SERVICES, TcpProvider } from '@common/configuration/tcp.config';
 import { RedisProvider } from '@common/configuration/redis.config';
 import { ThrottlerProvider } from '@common/configuration/throttler.config';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { GRPC_SERVICES, GrpcProvider } from '@common/configuration/grpc.config';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ClientsModule.registerAsync([TcpProvider(TCP_SERVICES.AUTHORIZER_SERVICE)]),
     RedisProvider,
     ThrottlerProvider,
+    ClientsModule.registerAsync([GrpcProvider(GRPC_SERVICES.AUTHORIZER_SERVICE)]),
   ],
   controllers: [],
   providers: [
